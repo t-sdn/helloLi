@@ -1,5 +1,7 @@
 package kr.re.etri.tsdn.impl;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -9,6 +11,10 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.Animal;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorld;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldBuilder;
@@ -23,6 +29,10 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.re
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldWriteOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.MultipleOfTens;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.MultipleOfTensBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.Organism;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.OrganismBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.animal.Fish;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.animal.FishBuilder;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -37,6 +47,7 @@ public class HelloWorldImpl implements HelloService, DataChangeListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HelloWorldImpl.class);
 	public static final InstanceIdentifier<HelloWorld> HELLO_IID = InstanceIdentifier.builder(HelloWorld.class).build();
+	public static final InstanceIdentifier<Organism> ORGANISM_IID = InstanceIdentifier.builder(Organism.class).build();
 	private DataBroker db;
 	private NotificationProviderService notificationService;
 	private long helloCounter = 100L;
@@ -141,6 +152,34 @@ public class HelloWorldImpl implements HelloService, DataChangeListener {
 			}
 		}
 
+	}
+
+	@Override
+	public Future<RpcResult<AnimalWriteOutput>> animalWrite(
+			AnimalWriteInput input) {
+		// TODO Auto-generated method stub
+		final ReadWriteTransaction tx = db.newReadWriteTransaction();
+
+		List<Fish> list = new LinkedList<>();
+		FishBuilder fishBuilder = new FishBuilder();
+		fishBuilder.setFishId(input.getId());
+		fishBuilder.setFishName(input.getStrin());
+		list.add(fishBuilder.build());
+		
+		tx.merge(LogicalDatastoreType.OPERATIONAL, ORGANISM_IID, new OrganismBuilder().setFish(list).build());
+		
+		try {
+			tx.submit().get();
+		} catch (InterruptedException | ExecutionException e) {
+			LOG.warn("[labry]Exception: ", e);
+			e.printStackTrace();
+		}
+		LOG.info("[labry]animalWrite(write): {} ", input.getStrin());
+
+		AnimalWriteOutputBuilder animalWriteOutputBuilder = new AnimalWriteOutputBuilder();
+		animalWriteOutputBuilder.setStrout(input.getStrin());
+
+		return RpcResultBuilder.success(animalWriteOutputBuilder.build()).buildFuture();
 	}
 
 

@@ -38,6 +38,57 @@ module hello {
         }        
 	}  
     
+    grouping fish {
+    	leaf fish-id {
+    		type uint32;
+    	}
+    	leaf fish-name {
+    		type string;
+    	}
+    }
+    
+    grouping mammal {
+    	leaf mammal-id {
+    		type uint32;
+    	}
+    	leaf mammal-name {
+    		type string;
+    	}
+    }
+    
+    grouping animal {
+    	list "fish" {
+    		key "fish-id";
+    		uses fish;
+    	}
+    	
+    	list "mammal" {
+    		key "mammal-id";
+    		uses mammal;
+    	}
+    	
+    }
+    
+    container organism {
+    	uses animal;
+    }
+
+    rpc animal-write {
+        input {
+        		leaf id {
+        			type uint32;
+        		}
+                leaf strin {
+                       type string;
+                }
+        }
+        output {
+                leaf strout {
+                       type string;
+                }
+        }
+	}
+    
     rpc hello-world-write {
         input {
                 leaf strin {
