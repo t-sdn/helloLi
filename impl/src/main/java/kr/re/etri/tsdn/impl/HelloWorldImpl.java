@@ -10,29 +10,13 @@ import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.Animal;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.AnimalWriteOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorld;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldReadInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldReadOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldReadOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldWriteInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldWriteOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.HelloWorldWriteOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.MultipleOfTens;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.MultipleOfTensBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.Organism;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.OrganismBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.Cat;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.animal.Fish;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.animal.FishBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.cats.*;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -51,6 +35,19 @@ public class HelloWorldImpl implements HelloService, DataChangeListener {
 	private DataBroker db;
 	private NotificationProviderService notificationService;
 	private long helloCounter = 100L;
+
+	public void setTsdnRoutedRpcReg(BindingAwareBroker.RoutedRpcRegistration<HelloService> tsdnRoutedRpcReg) {
+		this.tsdnRoutedRpcReg = tsdnRoutedRpcReg;
+
+		InstanceIdentifier<org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.cats.Cat> path = InstanceIdentifier
+				.create(Cats.class)
+				.child(org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.hello.rev150105.cats.Cat.class, new CatKey("cat"));
+
+		tsdnRoutedRpcReg.registerPath(CatContext.class, path);
+		//{"hello:input":{"name-ref":"/hello:cats/hello:cat[hello:name='cat']"}}
+	}
+
+	private BindingAwareBroker.RoutedRpcRegistration<HelloService> tsdnRoutedRpcReg;
 
 	@Override
 	public Future<RpcResult<HelloWorldOutput>> helloWorld(HelloWorldInput input) {
@@ -121,6 +118,16 @@ public class HelloWorldImpl implements HelloService, DataChangeListener {
 		helloWriteBuilder.setStrout(input.getStrin());
 
 		return RpcResultBuilder.success(helloWriteBuilder.build()).buildFuture();
+	}
+
+	@Override
+	public Future<RpcResult<MakeSoundOutput>> makeSound(MakeSoundInput input) {
+
+		MakeSoundOutputBuilder	makeSoundOutputBuilder = new MakeSoundOutputBuilder();
+
+		makeSoundOutputBuilder.setResult("cat is good.");
+
+		return RpcResultBuilder.success(makeSoundOutputBuilder.build()).buildFuture();
 	}
 
 	public void setDb(DataBroker db) {

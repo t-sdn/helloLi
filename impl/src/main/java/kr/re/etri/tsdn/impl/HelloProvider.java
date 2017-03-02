@@ -11,6 +11,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataBroker.DataChangeScope;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.controller.sal.binding.api.NotificationListener;
@@ -29,13 +30,22 @@ public class HelloProvider implements BindingAwareProvider, AutoCloseable, Hello
 	private DataBroker db;
     private NotificationProviderService notificationService;
     private ListenerRegistration<org.opendaylight.yangtools.yang.binding.NotificationListener> listenerRegistration;
-    
+	private BindingAwareBroker.RoutedRpcRegistration<HelloService> tsdnRoutedRpcReg;
+
 	@Override
 	public void onSessionInitiated(ProviderContext session) {
 
+
 		//RPC wiring
 		HelloWorldImpl helloWorldImpl = new HelloWorldImpl();
-		session.addRpcImplementation(HelloService.class, helloWorldImpl);
+		this.tsdnRoutedRpcReg = session.addRoutedRpcImplementation(HelloService.class, helloWorldImpl);
+		helloWorldImpl.setTsdnRoutedRpcReg(tsdnRoutedRpcReg);
+
+		DogImpl dogImple = new DogImpl();
+		this.tsdnRoutedRpcReg = session.addRoutedRpcImplementation(HelloService.class, dogImple);
+		dogImple.setTsdnRoutedRpcReg(tsdnRoutedRpcReg);
+
+//		session.addRpcImplementation(HelloService.class, helloWorldImpl);
 
 		//Data Broker
 		db = session.getSALService(DataBroker.class);

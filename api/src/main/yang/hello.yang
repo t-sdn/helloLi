@@ -2,7 +2,9 @@ module hello {
     yang-version 1;
     namespace "urn:opendaylight:params:xml:ns:yang:hello";
     prefix "hello";
-    
+
+    import yang-ext {prefix ext; revision-date "2013-07-09";}
+
     revision "2015-01-05" {
         description "Initial revision of hello model";
     }
@@ -119,5 +121,51 @@ module hello {
         description
         "indicates that the counter has reached multiple of 10.";
 	}
+
+	    typedef cat-ref {
+            type instance-identifier;
+            description "A reference that points to a cat in the data tree.";
+        }
+
+        identity cat-context {
+            description "A cat-context is a classifier for node elements which allows an RPC to provide a service on behalf of a particular element in the data tree.";
+        }
+
+        grouping cat {
+            leaf name {
+                type string;
+            }
+            container paw {
+                leaf name {
+                type string;
+                }
+            }
+        }
+
+        container cats {
+            description "The root container of all nodes.";
+            list cat {
+                key "name";
+                ext:context-instance name;
+                uses cat;
+            }
+        }
+
+        rpc make-sound {
+            input {
+            		leaf name-ref {
+            		    //type string;
+                    	ext:context-reference cat-context;
+                    	type cat-ref;
+                	}
+            }
+
+            output {
+                    leaf result {
+                        type string;
+                    }
+            }
+
+        }
 
 }		
